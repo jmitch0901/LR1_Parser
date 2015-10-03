@@ -14,6 +14,9 @@ public class LR1 {
     static Stack<String> mainStack = new Stack<>();
     static Stack<String> stackTracer = new Stack<>();
 
+    static boolean useMethod = false;
+    static boolean acceptAnswer = false;
+
     public static void main(String[] args){
 
         if(args==null || args.length==0 || args[0]==null || args[0].isEmpty()) {
@@ -39,15 +42,58 @@ public class LR1 {
         int answer = 0;
 
 
-        while(!tokens.get(index).equals("$")){
+        p0();
 
+        while(!acceptAnswer){
+            interpretStack();
         }
 
 
-        p0();
-
 
         return answer;
+    }
+
+    public static void interpretStack() throws Exception{
+        switch(getStackPhase(mainStack.peek())){
+            case "0":
+                p0();
+                break;
+            case "1":
+                p1();
+                break;
+            case "2":
+                p2();
+                break;
+            case "3":
+                p3();
+                break;
+            case "4":
+                p4();
+                break;
+            case "5":
+                p5();
+                break;
+            case "6":
+                p6();
+                break;
+            case "7":
+                p7();
+                break;
+            case "8":
+                p8();
+                break;
+            case "9":
+                p9();
+                break;
+            case "10":
+                p10();
+                break;
+            case "11":
+                p11();
+                break;
+            default:
+                throw new Exception("Stack contains bad phase in interpretStack()");
+        }
     }
 
     public static int performStackOperation(){
@@ -55,29 +101,70 @@ public class LR1 {
     }
 
     public static void p0() throws Exception{
-        try{
-            int n = Integer.parseInt(tokens.get(index));
-            pushPhaseAndIncrement(0);
-        } catch (Exception e){
-            if(tokens.get(index).equals("(")){
-                pushPhaseAndIncrement(4);
-            } else {
-                throw throwSyntaxException();
+        if(useMethod){
+            String method  = getStackToken(mainStack.peek());
+            switch (method){
+                case "E":
+                    pushPhaseOnly(1);
+                    break;
+                case "T":
+                    pushPhaseOnly(2);
+                    break;
+                case "F":
+                    pushPhaseOnly(3);
+                    break;
+                default:
+                    throw new Exception("Couldn't find " +
+                            "good method token in phase 0");
+            }
+        } else {
+            try {
+                int n = Integer.parseInt(tokens.get(index));
+                pushPhaseAndIncrement(0);
+            } catch (Exception e) {
+                if (tokens.get(index).equals("(")) {
+                    pushPhaseAndIncrement(4);
+                } else {
+                    throw throwSyntaxException();
+                }
             }
         }
     }
 
-    public static Exception throwSyntaxException(){
-        return new Exception("Syntax error: Bad Token \'"+tokens.get(index)+"\' at character "+index);
+    public static void p1() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 1");
+
+        switch(getStackToken(mainStack.peek())){
+            case "+":
+                pushPhaseAndIncrement(6);
+                break;
+            case "$":
+                acceptAnswer=true;
+                break;
+            default:
+                throwSyntaxException();
+        }
     }
 
-    public static int p1() throws Exception{
-        return 0;
+    public static void p2() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 2");
+
+        switch(getStackToken(mainStack.peek())){
+            case "+":
+
+                break;
+            case "*":
+                pushPhaseAndIncrement(7);
+                break;
+            case ")":
+                break;
+            case "$":
+                break;
+            default:
+                throwSyntaxException();
+        }
     }
 
-    public static int p2() throws Exception{
-        return 0;
-    }
 
     public static int p3() throws Exception{
         return 0;
@@ -129,18 +216,25 @@ public class LR1 {
          Return just the phase part given
          in stack string format '[token:phase]'
      */
-    public static String getStackMethod(String stackString){
+    public static String getStackPhase(String stackString){
         return "" + stackString.charAt(3);
     }
 
-    public static void pushPhaseAndIncrement(String phase){
+    public String popAndPrint(){
+        String popped = mainStack.pop();
+        printStackTrace();
+        return popped;
+    }
+
+    public static void pushPhaseOnly(int phase){
         mainStack.push("["+tokens.get(index)+":"+phase+"]");
-        index++;
+        printStackTrace();
     }
 
     public static void pushPhaseAndIncrement(int phase){
         mainStack.push("["+tokens.get(index)+":"+phase+"]");
         index++;
+        printStackTrace();
     }
 
 
@@ -164,5 +258,8 @@ public class LR1 {
         System.out.println(builder.toString());
     }
 
+    public static Exception throwSyntaxException(){
+        return new Exception("Syntax error: Bad Token \'"+tokens.get(index)+"\' at character "+index);
+    }
 
 }
