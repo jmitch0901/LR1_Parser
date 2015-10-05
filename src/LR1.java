@@ -17,6 +17,7 @@ public class LR1 {
     static boolean useMethod = false;
     static boolean acceptAnswer = false;
 
+
     public static void main(String[] args){
 
         if(args==null || args.length==0 || args[0]==null || args[0].isEmpty()) {
@@ -24,7 +25,7 @@ public class LR1 {
             return;
         }
 
-        StringTokenizer tokenizer = new StringTokenizer(args[0]+"$","()+*$",true);
+        StringTokenizer tokenizer = new StringTokenizer("-"+args[0]+"$","()+*$",true);
         while(tokenizer.hasMoreTokens()){
             tokens.add(tokenizer.nextToken());
         }
@@ -41,11 +42,10 @@ public class LR1 {
     public static int computeAnswer() throws Exception{
         int answer = 0;
 
-
-        p0();
+        pushPhaseAndIncrement(0);
 
         while(!acceptAnswer){
-            interpretStack();
+            interpretStack(getStackPhase(mainStack.peek()));
         }
 
 
@@ -53,8 +53,8 @@ public class LR1 {
         return answer;
     }
 
-    public static void interpretStack() throws Exception{
-        switch(getStackPhase(mainStack.peek())){
+    public static void interpretStack(String phaseString) throws Exception{
+        switch(phaseString){
             case "0":
                 p0();
                 break;
@@ -119,8 +119,8 @@ public class LR1 {
             }
         } else {
             try {
-                int n = Integer.parseInt(tokens.get(index));
-                pushPhaseAndIncrement(0);
+                Integer.parseInt(tokens.get(index));
+                pushPhaseAndIncrement(5);
             } catch (Exception e) {
                 if (tokens.get(index).equals("(")) {
                     pushPhaseAndIncrement(4);
@@ -174,8 +174,20 @@ public class LR1 {
         return 0;
     }
 
-    public static int p5() throws Exception{
-        return 0;
+    public static void p5() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 5");
+        switch (getStackToken(mainStack.peek())){
+            case "+":
+                break;
+            case "*":
+                break;
+            case ")":
+                break;
+            case "$":
+                break;
+            default:
+                throw throwSyntaxException();
+        }
     }
 
     public static int p6() throws Exception{
@@ -201,8 +213,6 @@ public class LR1 {
     public static int p11() throws Exception{
         return 0;
     }
-
-
 
     /**
         Return just the token part given
