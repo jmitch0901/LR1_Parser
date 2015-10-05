@@ -11,12 +11,66 @@ public class LR1 {
     static List<String> tokens = new ArrayList<>();
     static int index = 0;
 
-    static Stack<String> mainStack = new Stack<>();
-    static Stack<String> stackTracer = new Stack<>();
+    //static Stack<String> mainStack = new Stack<>();
+    static Stack<StackObject> stackTracer = new Stack<>();
+
+    static Stack<StackObject> mainStack = new Stack<>();
+
 
     static boolean useMethod = false;
     static boolean acceptAnswer = false;
 
+    static class StackObject{
+
+        private String token;
+        private int phase;
+
+        private int prevValue;
+
+        public StackObject(String token,int phase){
+            this.token=token;
+            this.phase=phase;
+        }
+
+
+        public void setRememberedValue(int value){
+            this.prevValue=value;
+        }
+
+        public void rememberNumericValue() throws Exception{
+            try{
+                prevValue=Integer.parseInt(token);
+            } catch (Exception e){
+                throw new Exception("Error, the original token wasn't numeric: "+token);
+            }
+        }
+
+        public int getPhase(){
+            return phase;
+        }
+
+        public void setPhase(int phase){
+            this.phase=phase;
+        }
+
+        public void reduceTo(String token, int phase){
+            this.token=token;
+            this.phase=phase;
+        }
+
+        public int getRememberedNumericValue(){
+            return prevValue;
+        }
+
+        public String getToken(){
+            return token;
+        }
+
+        @Override
+        public String toString() {
+            return "["+token+":"+phase+"]";
+        }
+    }
 
     public static void main(String[] args){
 
@@ -25,7 +79,7 @@ public class LR1 {
             return;
         }
 
-        StringTokenizer tokenizer = new StringTokenizer("-"+args[0]+"$","()+*$",true);
+        StringTokenizer tokenizer = new StringTokenizer(args[0]+"$","()+*$",true);
         while(tokenizer.hasMoreTokens()){
             tokens.add(tokenizer.nextToken());
         }
@@ -42,10 +96,10 @@ public class LR1 {
     public static int computeAnswer() throws Exception{
         int answer = 0;
 
-        pushPhaseAndIncrement(0);
+        mainStack.push(new StackObject("-",0));
 
         while(!acceptAnswer){
-            interpretStack(getStackPhase(mainStack.peek()));
+            interpretStack(mainStack.peek().getPhase());
         }
 
 
@@ -53,42 +107,42 @@ public class LR1 {
         return answer;
     }
 
-    public static void interpretStack(String phaseString) throws Exception{
-        switch(phaseString){
-            case "0":
+    public static void interpretStack(int phase) throws Exception{
+        switch(phase){
+            case 0:
                 p0();
                 break;
-            case "1":
+            case 1:
                 p1();
                 break;
-            case "2":
+            case 2:
                 p2();
                 break;
-            case "3":
+            case 3:
                 p3();
                 break;
-            case "4":
+            case 4:
                 p4();
                 break;
-            case "5":
+            case 5:
                 p5();
                 break;
-            case "6":
+            case 6:
                 p6();
                 break;
-            case "7":
+            case 7:
                 p7();
                 break;
-            case "8":
+            case 8:
                 p8();
                 break;
-            case "9":
+            case 9:
                 p9();
                 break;
-            case "10":
+            case 10:
                 p10();
                 break;
-            case "11":
+            case 11:
                 p11();
                 break;
             default:
@@ -96,13 +150,10 @@ public class LR1 {
         }
     }
 
-    public static int performStackOperation(){
-        return 0;
-    }
-
     public static void p0() throws Exception{
         if(useMethod){
-            String method  = getStackToken(mainStack.peek());
+            useMethod=false;
+            String method  = mainStack.peek().getToken();
             switch (method){
                 case "E":
                     pushPhaseOnly(1);
@@ -134,7 +185,7 @@ public class LR1 {
     public static void p1() throws Exception{
         if(useMethod) throw new Exception("Error, no method available at phase 1");
 
-        switch(getStackToken(mainStack.peek())){
+        switch(tokens.get(index)){
             case "+":
                 pushPhaseAndIncrement(6);
                 break;
@@ -146,19 +197,25 @@ public class LR1 {
         }
     }
 
+    /*
+        We're gonna need to check that the top of the stack has T before
+        reducing to E
+     */
     public static void p2() throws Exception{
         if(useMethod) throw new Exception("Error, no method available at phase 2");
 
-        switch(getStackToken(mainStack.peek())){
+        switch(tokens.get(index)){
             case "+":
-
+                reduceSingleStackTop("E", "T");
                 break;
             case "*":
                 pushPhaseAndIncrement(7);
                 break;
             case ")":
+                reduceSingleStackTop("E", "T");
                 break;
             case "$":
+                reduceSingleStackTop("E", "T");
                 break;
             default:
                 throwSyntaxException();
@@ -166,48 +223,194 @@ public class LR1 {
     }
 
 
-    public static int p3() throws Exception{
-        return 0;
-    }
+    public static void p3() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 3");
 
-    public static int p4() throws Exception{
-        return 0;
-    }
-
-    public static void p5() throws Exception{
-        if(useMethod) throw new Exception("Error, no method available at phase 5");
-        switch (getStackToken(mainStack.peek())){
+        switch(tokens.get(index)){
             case "+":
+                reduceSingleStackTop("T", "F");
                 break;
             case "*":
+                reduceSingleStackTop("T", "F");
                 break;
             case ")":
+                reduceSingleStackTop("T", "F");
                 break;
             case "$":
+                reduceSingleStackTop("T", "F");
+                break;
+            default:
+                throwSyntaxException();
+        }
+    }
+
+    public static void p4() throws Exception{
+        if(useMethod){
+            useMethod=false;
+            String method  = mainStack.peek().getToken();
+            switch (method){
+                case "E":
+                    pushPhaseOnly(8);
+                    break;
+                case "T":
+                    pushPhaseOnly(2);
+                    break;
+                case "F":
+                    pushPhaseOnly(3);
+                    break;
+                default:
+                    throw new Exception("Couldn't find " +
+                            "good method token in phase 0");
+            }
+        } else {
+            try {
+                Integer.parseInt(tokens.get(index));
+                pushPhaseAndIncrement(5);
+            } catch (Exception e) {
+                if (tokens.get(index).equals("(")) {
+                    pushPhaseAndIncrement(4);
+                } else {
+                    throw throwSyntaxException();
+                }
+            }
+        }
+    }
+
+    //There will be a bug here for teh numeric remember
+    public static void p5() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 5");
+
+        switch (tokens.get(index)){
+            case "+":
+                mainStack.peek().rememberNumericValue();
+                reduceSingleStackTop("F", mainStack.peek().getRememberedNumericValue() + "");
+                break;
+            case "*":
+                mainStack.peek().rememberNumericValue();
+                reduceSingleStackTop("F", mainStack.peek().getRememberedNumericValue() + "");
+                break;
+            case ")":
+                mainStack.peek().rememberNumericValue();
+                reduceSingleStackTop("F", mainStack.peek().getRememberedNumericValue() + "");
+                break;
+            case "$":
+                mainStack.peek().rememberNumericValue();
+                reduceSingleStackTop("F", mainStack.peek().getRememberedNumericValue() + "");
                 break;
             default:
                 throw throwSyntaxException();
         }
     }
 
-    public static int p6() throws Exception{
-        return 0;
+    public static void p6() throws Exception{
+        if(useMethod){
+            useMethod=false;
+            String method  = mainStack.peek().getToken();
+            switch (method){
+                case "T":
+                    pushPhaseOnly(9);
+                    break;
+                case "F":
+                    pushPhaseOnly(3);
+                    break;
+                default:
+                    throw new Exception("Couldn't find " +
+                            "good method token in phase 0");
+            }
+        } else {
+            try {
+                Integer.parseInt(tokens.get(index));
+                pushPhaseAndIncrement(5);
+            } catch (Exception e) {
+                if (tokens.get(index).equals("(")) {
+                    pushPhaseAndIncrement(4);
+                } else {
+                    throw throwSyntaxException();
+                }
+            }
+        }
     }
 
-    public static int p7() throws Exception{
-        return 0;
+    public static void p7() throws Exception{
+        if(useMethod){
+            useMethod=false;
+            String method  = mainStack.peek().getToken();
+            switch (method){
+                case "F":
+                    pushPhaseOnly(10);
+                    break;
+                default:
+                    throw new Exception("Couldn't find " +
+                            "good method token in phase 0");
+            }
+        } else {
+            try {
+                Integer.parseInt(tokens.get(index));
+                pushPhaseAndIncrement(5);
+            } catch (Exception e) {
+                if (tokens.get(index).equals("(")) {
+                    pushPhaseAndIncrement(4);
+                } else {
+                    throw throwSyntaxException();
+                }
+            }
+        }
     }
 
-    public static int p8() throws Exception{
-        return 0;
+    public static void p8() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 8");
+
+        switch(tokens.get(index)){
+            case "+":
+                pushPhaseAndIncrement(6);
+                break;
+            case ")":
+                pushPhaseAndIncrement(11);
+                break;
+        }
+
     }
 
-    public static int p9() throws Exception{
-        return 0;
+    public static void p9() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 9");
+
+        switch (tokens.get(index)){
+            case "+":
+                computeArithmetic("E","+","T");
+                break;
+            case "*":
+                pushPhaseAndIncrement(7);
+                break;
+            case ")":
+                computeArithmetic("E","+","T");
+                break;
+            case "$":
+                computeArithmetic("E","+","T");
+                break;
+            default:
+                throwSyntaxException();
+        }
     }
 
-    public static int p10() throws Exception{
-        return 0;
+    public static void p10() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 10");
+
+        switch (tokens.get(index)){
+            case "+":
+                computeArithmetic("T","*","F");
+                break;
+            case "*":
+                computeArithmetic("T","*","F");
+                break;
+            case ")":
+                computeArithmetic("T","*","F");
+                break;
+            case "$":
+                computeArithmetic("T","*","F");
+                break;
+            default:
+                throwSyntaxException();
+        }
     }
 
     public static int p11() throws Exception{
@@ -230,23 +433,76 @@ public class LR1 {
         return "" + stackString.charAt(3);
     }
 
-    public String popAndPrint(){
-        String popped = mainStack.pop();
-        printStackTrace();
-        return popped;
+    public static void reduceParenthases(String methodToken) throws Exception{
+        StackObject[] stackObjects = new StackObject[3];
+        for(int i = 0; i < 3; i++){
+            stackObjects[i] = mainStack.pop();
+        }
+
+        if(!stackObjects[0].getToken().equalsIgnoreCase(")")
+                || !stackObjects[1].getToken().equalsIgnoreCase(methodToken)
+                || !stackObjects[2].getToken().equalsIgnoreCase("(")
+                )
+        {
+            throwSyntaxException();
+        }
+
+        mainStack.push(stackObjects[2]);
+        reduceSingleStackTop("F","E");
+    }
+
+    public static void computeArithmetic(String leftToken, String operator, String rightToken) throws Exception{
+        StackObject[] stackObjects = new StackObject[3];
+        for(int i = 0; i < 3; i++){
+            stackObjects[i] = mainStack.pop();
+        }
+
+        if(!leftToken.equalsIgnoreCase(stackObjects[2].getToken())
+                || !operator.equalsIgnoreCase(stackObjects[1].getToken())
+                || !rightToken.equalsIgnoreCase(stackObjects[0].getToken())
+                )
+        {
+            throwSyntaxException();
+        }
+
+        int value = -1;
+        switch (operator){
+            case "*":
+                value = stackObjects[2].getRememberedNumericValue()
+                        * stackObjects[0].getRememberedNumericValue();
+            case "+":
+                value =  stackObjects[2].getRememberedNumericValue()
+                        + stackObjects[0].getRememberedNumericValue();
+            default:
+                throwSyntaxException();
+        }
+
+        stackObjects[2].setRememberedValue(value);
+        mainStack.push(stackObjects[2]);
+        useMethod=true;
+
     }
 
     public static void pushPhaseOnly(int phase){
-        mainStack.push("["+tokens.get(index)+":"+phase+"]");
+       // mainStack.push("["+tokens.get(index)+":"+phase+"]");
+        mainStack.push(new StackObject(tokens.get(index),phase));
         printStackTrace();
     }
 
     public static void pushPhaseAndIncrement(int phase){
-        mainStack.push("["+tokens.get(index)+":"+phase+"]");
+        //mainStack.push("["+tokens.get(index)+":"+phase+"]");
+        mainStack.push(new StackObject(tokens.get(index),phase));
         index++;
         printStackTrace();
     }
 
+    public static void reduceSingleStackTop(String newToken,String oldToken) throws Exception{
+        StackObject so = mainStack.pop();
+        if(!oldToken.equalsIgnoreCase(mainStack.peek().getToken())) throwSyntaxException();
+        so.reduceTo(newToken, mainStack.peek().getPhase());
+        mainStack.push(so);
+        useMethod=true;
+    }
 
     public static void printStackTrace(){
         while(!mainStack.empty()){
@@ -255,9 +511,9 @@ public class LR1 {
 
         StringBuilder builder = new StringBuilder();
         while(!stackTracer.empty()){
-            String tempString = stackTracer.pop();
-            builder.append(tempString);
-            mainStack.push(tempString);
+            StackObject so = stackTracer.pop();
+            builder.append(so.toString());
+            mainStack.push(so);
         }
 
         builder.append("\t");
@@ -267,6 +523,8 @@ public class LR1 {
 
         System.out.println(builder.toString());
     }
+       /*
+    }*/
 
     public static Exception throwSyntaxException(){
         return new Exception("Syntax error: Bad Token \'"+tokens.get(index)+"\' at character "+index);
