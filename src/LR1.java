@@ -34,6 +34,7 @@ public class LR1 {
 
 
         public void setRememberedValue(int value){
+
             this.prevValue=value;
         }
 
@@ -94,7 +95,6 @@ public class LR1 {
     }
 
     public static int computeAnswer() throws Exception{
-        int answer = 0;
 
         mainStack.push(new StackObject("-",0));
 
@@ -104,7 +104,7 @@ public class LR1 {
 
 
 
-        return answer;
+        return mainStack.peek().getRememberedNumericValue();
     }
 
     public static void interpretStack(int phase) throws Exception{
@@ -156,13 +156,19 @@ public class LR1 {
             String method  = mainStack.peek().getToken();
             switch (method){
                 case "E":
-                    pushPhaseOnly(1);
+                    mainStack.peek().setPhase(1);
+                    printStackTrace();
+                    //pushPhaseOnly(1);
                     break;
                 case "T":
-                    pushPhaseOnly(2);
+                    mainStack.peek().setPhase(2);
+                    printStackTrace();
+                    //pushPhaseOnly(2);
                     break;
                 case "F":
-                    pushPhaseOnly(3);
+                    mainStack.peek().setPhase(3);
+                    printStackTrace();
+                    //pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -250,13 +256,20 @@ public class LR1 {
             String method  = mainStack.peek().getToken();
             switch (method){
                 case "E":
-                    pushPhaseOnly(8);
+                    mainStack.peek().setPhase(8);
+                    printStackTrace();
+
+                    //pushPhaseOnly(8);
                     break;
                 case "T":
-                    pushPhaseOnly(2);
+                    mainStack.peek().setPhase(2);
+                    printStackTrace();
+                    //pushPhaseOnly(2);
                     break;
                 case "F":
-                    pushPhaseOnly(3);
+                    mainStack.peek().setPhase(3);
+                    printStackTrace();
+                    //pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -308,10 +321,14 @@ public class LR1 {
             String method  = mainStack.peek().getToken();
             switch (method){
                 case "T":
-                    pushPhaseOnly(9);
+                    mainStack.peek().setPhase(9);
+                    printStackTrace();
+                    //pushPhaseOnly(9);
                     break;
                 case "F":
-                    pushPhaseOnly(3);
+                    mainStack.peek().setPhase(3);
+                    printStackTrace();
+                   // pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -337,7 +354,9 @@ public class LR1 {
             String method  = mainStack.peek().getToken();
             switch (method){
                 case "F":
-                    pushPhaseOnly(10);
+                    mainStack.peek().setPhase(10);
+                    printStackTrace();
+                    //pushPhaseOnly(10);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -479,7 +498,7 @@ public class LR1 {
 
         stackObjects[2].setRememberedValue(value);
         mainStack.push(stackObjects[2]);
-        useMethod=true;
+        //useMethod=true;
 
     }
 
