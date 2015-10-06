@@ -373,6 +373,8 @@ public class LR1 {
             case ")":
                 pushPhaseAndIncrement(11);
                 break;
+            default:
+                throw new Exception("Syntax error, no closing parentheses to match opening");
         }
 
     }
@@ -508,12 +510,6 @@ public class LR1 {
 
     public static void reduceSingleStackTop(String newToken,String oldToken) throws Exception{
         StackObject so = mainStack.pop();
-
-        //if(!oldToken.equals(so.getToken())) throw throwSyntaxException();
-
-       // System.out.println("TOP TOKEN: "+mainStack.peek().getToken());
-
-        //else if(!isNumeric(oldToken) && !oldToken.equalsIgnoreCase(mainStack.peek().getToken())) throw throwSyntaxException();
 
         so.reduceTo(newToken, mainStack.peek().getPhase());
         mainStack.push(so);
