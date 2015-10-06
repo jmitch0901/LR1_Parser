@@ -11,11 +11,8 @@ public class LR1 {
     static List<String> tokens = new ArrayList<>();
     static int index = 0;
 
-    //static Stack<String> mainStack = new Stack<>();
-    static Stack<StackObject> stackTracer = new Stack<>();
-
     static Stack<StackObject> mainStack = new Stack<>();
-
+    static Stack<StackObject> stackTracer = new Stack<>();
 
     static boolean useMethod = false;
     static boolean acceptAnswer = false;
@@ -159,17 +156,14 @@ public class LR1 {
                 case "E":
                     mainStack.peek().setPhase(1);
                     printStackTrace();
-                    //pushPhaseOnly(1);
                     break;
                 case "T":
                     mainStack.peek().setPhase(2);
                     printStackTrace();
-                    //pushPhaseOnly(2);
                     break;
                 case "F":
                     mainStack.peek().setPhase(3);
                     printStackTrace();
-                    //pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -259,18 +253,14 @@ public class LR1 {
                 case "E":
                     mainStack.peek().setPhase(8);
                     printStackTrace();
-
-                    //pushPhaseOnly(8);
                     break;
                 case "T":
                     mainStack.peek().setPhase(2);
                     printStackTrace();
-                    //pushPhaseOnly(2);
                     break;
                 case "F":
                     mainStack.peek().setPhase(3);
                     printStackTrace();
-                    //pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -290,7 +280,6 @@ public class LR1 {
         }
     }
 
-    //There will be a bug here for teh numeric remember
     public static void p5() throws Exception{
         if(useMethod) throw new Exception("Error, no method available at phase 5");
 
@@ -324,12 +313,10 @@ public class LR1 {
                 case "T":
                     mainStack.peek().setPhase(9);
                     printStackTrace();
-                    //pushPhaseOnly(9);
                     break;
                 case "F":
                     mainStack.peek().setPhase(3);
                     printStackTrace();
-                   // pushPhaseOnly(3);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -357,7 +344,6 @@ public class LR1 {
                 case "F":
                     mainStack.peek().setPhase(10);
                     printStackTrace();
-                    //pushPhaseOnly(10);
                     break;
                 default:
                     throw new Exception("Couldn't find " +
@@ -396,7 +382,7 @@ public class LR1 {
 
         switch (tokens.get(index)){
             case "+":
-                computeArithmetic("E","+","T");
+                computeArithmetic("E", "+", "T");
                 break;
             case "*":
                 pushPhaseAndIncrement(7);
@@ -454,22 +440,6 @@ public class LR1 {
         }
     }
 
-    /**
-        Return just the token part given
-        in stack string format '[token:phase]'
-     */
-    public static String getStackToken(String stackToken){
-        return "" + stackToken.charAt(1);
-    }
-
-    /**
-         Return just the phase part given
-         in stack string format '[token:phase]'
-     */
-    public static String getStackPhase(String stackString){
-        return "" + stackString.charAt(3);
-    }
-
     public static void reduceParenthases(String methodToken) throws Exception{
         StackObject[] stackObjects = new StackObject[3];
         for(int i = 0; i < 3; i++){
@@ -487,7 +457,16 @@ public class LR1 {
 
         mainStack.push(stackObjects[2]);
         mainStack.peek().setRememberedValue(stackObjects[1].getRememberedNumericValue());
-        reduceSingleStackTop("F","E");
+        reduceSingleStackTop("F", "E");
+    }
+
+    public static boolean isNumeric(String s){
+        try{
+            Integer.parseInt(s);
+            return true;
+        } catch(Exception e){
+            return false;
+        }
     }
 
     public static void computeArithmetic(String leftToken, String operator, String rightToken) throws Exception{
@@ -504,7 +483,7 @@ public class LR1 {
             throw throwSyntaxException();
         }
 
-        int value = -1;
+        int value = 0;
         if(operator.equals("*")){
             value = stackObjects[2].getRememberedNumericValue()
                     * stackObjects[0].getRememberedNumericValue();
@@ -514,36 +493,9 @@ public class LR1 {
         } else {
             throw throwSyntaxException();
         }
-       /* switch (operator){
-            case "*":
-                value = stackObjects[2].getRememberedNumericValue()
-                        * stackObjects[0].getRememberedNumericValue();
-            case "+":
-                value =  stackObjects[2].getRememberedNumericValue()
-                        + stackObjects[0].getRememberedNumericValue();
-            default:
-                throwSyntaxException();
-        }*/
-
-        //System.out.println("Stack Object 1 Value: "+stackObjects[0].getRememberedNumericValue());
-        //System.out.println("Stack Object 2 Value: "+stackObjects[2].getRememberedNumericValue());
 
         stackObjects[2].setRememberedValue(value);
         mainStack.push(stackObjects[2]);
-        //System.out.println("YAAA"+stackObjects[2].toString()+" BABY -> "+stackObjects[2].getRememberedNumericValue());
-        printStackTrace();
-
-        /*for(StackObject o : stackObjects){
-            System.out.println(o.toString());
-        }
-        System.out.println(value);*/
-        //useMethod=true;
-
-    }
-
-    public static void pushPhaseOnly(int phase){
-       // mainStack.push("["+tokens.get(index)+":"+phase+"]");
-        mainStack.push(new StackObject(tokens.get(index),phase));
         printStackTrace();
     }
 
@@ -554,12 +506,15 @@ public class LR1 {
         printStackTrace();
     }
 
-    /*
-        Error here because i also need to check if the n value is numeric
-     */
     public static void reduceSingleStackTop(String newToken,String oldToken) throws Exception{
         StackObject so = mainStack.pop();
-        if(!oldToken.equalsIgnoreCase(mainStack.peek().getToken())) /*throw*/ throwSyntaxException();
+
+        //if(!oldToken.equals(so.getToken())) throw throwSyntaxException();
+
+       // System.out.println("TOP TOKEN: "+mainStack.peek().getToken());
+
+        //else if(!isNumeric(oldToken) && !oldToken.equalsIgnoreCase(mainStack.peek().getToken())) throw throwSyntaxException();
+
         so.reduceTo(newToken, mainStack.peek().getPhase());
         mainStack.push(so);
         useMethod=true;
@@ -584,11 +539,13 @@ public class LR1 {
 
         System.out.println(builder.toString());
     }
-       /*
-    }*/
 
     public static Exception throwSyntaxException(){
+
+        if(tokens.get(index).equals("$")){
+            return new Exception("Syntax error, "+"\'"+tokens.get(index-1)+"\' must be followed by an integer");
+        }
+
         return new Exception("Syntax error: Bad Token \'"+tokens.get(index)+"\' at character "+index);
     }
-
 }
