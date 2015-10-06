@@ -25,7 +25,7 @@ public class LR1 {
         private String token;
         private int phase;
 
-        private int prevValue;
+        private int rememberedValue;
 
         public StackObject(String token,int phase){
             this.token=token;
@@ -35,12 +35,13 @@ public class LR1 {
 
         public void setRememberedValue(int value){
 
-            this.prevValue=value;
+            this.rememberedValue = value;
         }
 
         public void rememberNumericValue() throws Exception{
             try{
-                prevValue=Integer.parseInt(token);
+                int i =Integer.parseInt(token);
+                this.rememberedValue = i;
             } catch (Exception e){
                 throw new Exception("Error, the original token wasn't numeric: "+token);
             }
@@ -60,7 +61,7 @@ public class LR1 {
         }
 
         public int getRememberedNumericValue(){
-            return prevValue;
+            return this.rememberedValue;
         }
 
         public String getToken(){
@@ -199,7 +200,7 @@ public class LR1 {
                 acceptAnswer=true;
                 break;
             default:
-                throwSyntaxException();
+                throw throwSyntaxException();
         }
     }
 
@@ -224,7 +225,7 @@ public class LR1 {
                 reduceSingleStackTop("E", "T");
                 break;
             default:
-                throwSyntaxException();
+                throw throwSyntaxException();
         }
     }
 
@@ -246,7 +247,7 @@ public class LR1 {
                 reduceSingleStackTop("T", "F");
                 break;
             default:
-                throwSyntaxException();
+               throw throwSyntaxException();
         }
     }
 
@@ -407,7 +408,7 @@ public class LR1 {
                 computeArithmetic("E","+","T");
                 break;
             default:
-                throwSyntaxException();
+               throw throwSyntaxException();
         }
     }
 
@@ -416,24 +417,41 @@ public class LR1 {
 
         switch (tokens.get(index)){
             case "+":
-                computeArithmetic("T","*","F");
+                computeArithmetic("T", "*", "F");
                 break;
             case "*":
-                computeArithmetic("T","*","F");
+                computeArithmetic("T", "*", "F");
                 break;
             case ")":
-                computeArithmetic("T","*","F");
+                computeArithmetic("T", "*", "F");
                 break;
             case "$":
-                computeArithmetic("T","*","F");
+                computeArithmetic("T", "*", "F");
                 break;
             default:
-                throwSyntaxException();
+                throw throwSyntaxException();
         }
     }
 
-    public static int p11() throws Exception{
-        return 0;
+    public static void p11() throws Exception{
+        if(useMethod) throw new Exception("Error, no method available at phase 11");
+
+        switch (tokens.get(index)){
+            case "+":
+                reduceParenthases("E");
+                break;
+            case "*":
+                reduceParenthases("E");
+                break;
+            case ")":
+                reduceParenthases("E");
+                break;
+            case "$":
+                reduceParenthases("E");
+                break;
+            default:
+                throw throwSyntaxException();
+        }
     }
 
     /**
@@ -463,10 +481,12 @@ public class LR1 {
                 || !stackObjects[2].getToken().equalsIgnoreCase("(")
                 )
         {
-            throwSyntaxException();
+            System.out.println("Throwing exception for parenthases");
+            throw throwSyntaxException();
         }
 
         mainStack.push(stackObjects[2]);
+        mainStack.peek().setRememberedValue(stackObjects[1].getRememberedNumericValue());
         reduceSingleStackTop("F","E");
     }
 
@@ -481,11 +501,20 @@ public class LR1 {
                 || !rightToken.equalsIgnoreCase(stackObjects[0].getToken())
                 )
         {
-            throwSyntaxException();
+            throw throwSyntaxException();
         }
 
         int value = -1;
-        switch (operator){
+        if(operator.equals("*")){
+            value = stackObjects[2].getRememberedNumericValue()
+                    * stackObjects[0].getRememberedNumericValue();
+        } else if (operator.equals("+")){
+            value =  stackObjects[2].getRememberedNumericValue()
+                    + stackObjects[0].getRememberedNumericValue();
+        } else {
+            throw throwSyntaxException();
+        }
+       /* switch (operator){
             case "*":
                 value = stackObjects[2].getRememberedNumericValue()
                         * stackObjects[0].getRememberedNumericValue();
@@ -494,10 +523,20 @@ public class LR1 {
                         + stackObjects[0].getRememberedNumericValue();
             default:
                 throwSyntaxException();
-        }
+        }*/
+
+        //System.out.println("Stack Object 1 Value: "+stackObjects[0].getRememberedNumericValue());
+        //System.out.println("Stack Object 2 Value: "+stackObjects[2].getRememberedNumericValue());
 
         stackObjects[2].setRememberedValue(value);
         mainStack.push(stackObjects[2]);
+        //System.out.println("YAAA"+stackObjects[2].toString()+" BABY -> "+stackObjects[2].getRememberedNumericValue());
+        printStackTrace();
+
+        /*for(StackObject o : stackObjects){
+            System.out.println(o.toString());
+        }
+        System.out.println(value);*/
         //useMethod=true;
 
     }
@@ -515,9 +554,12 @@ public class LR1 {
         printStackTrace();
     }
 
+    /*
+        Error here because i also need to check if the n value is numeric
+     */
     public static void reduceSingleStackTop(String newToken,String oldToken) throws Exception{
         StackObject so = mainStack.pop();
-        if(!oldToken.equalsIgnoreCase(mainStack.peek().getToken())) throwSyntaxException();
+        if(!oldToken.equalsIgnoreCase(mainStack.peek().getToken())) /*throw*/ throwSyntaxException();
         so.reduceTo(newToken, mainStack.peek().getPhase());
         mainStack.push(so);
         useMethod=true;
